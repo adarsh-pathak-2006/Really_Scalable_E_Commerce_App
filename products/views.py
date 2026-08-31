@@ -25,7 +25,7 @@ class CategoryDetailAPI(RetrieveUpdateDestroyAPIView):
 
 class ProductAPI(ListCreateAPIView):
     serializer_class=ProductSerializer
-    queryset=Product.objects.all()
+    queryset=Product.objects.select_related('category')
     pagination_class=GeneralPagination
 
     @method_decorator(cache_page(60*5))
@@ -34,7 +34,7 @@ class ProductAPI(ListCreateAPIView):
 
 class ProductDetailAPI(RetrieveUpdateDestroyAPIView):
     serializer_class=ProductSerializer
-    queryset=Product.objects.all()
+    queryset=Product.objects.select_related('category')
 
     @method_decorator(cache_page(60*5))
     def get(self, request, *args, **kwargs):

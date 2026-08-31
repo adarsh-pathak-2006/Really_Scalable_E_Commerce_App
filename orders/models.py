@@ -29,8 +29,3 @@ class CartItem(models.Model):
     def __str__(self):
         return self.item.name
 
-class Order(models.Model):
-    cart=models.ForeignKey(Cart, on_delete=models.CASCADE)
-    payment_method=models.CharField(max_length=100, choices=[('CASH', 'Cash'), ('CARD', 'Card')])
-    status=models.CharField(max_length=50, choices=[('RECIEVED', 'Recieved'), ('PROCESSING', 'Processing'), ('COMPLETED', 'Completed')], default='RECIEVED')
-    created_on=models.DateTimeField(auto_now_add=True)

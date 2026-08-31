@@ -8,6 +8,7 @@ from django.db.models import Q
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from orders.models import Cart
 
 User=get_user_model()
 
@@ -23,7 +24,8 @@ class RegisterAPI(APIView):
             if User.objects.filter(Q(username=username) | Q(email=email)).exists():
                 return Response({'message':'username or email already exists'}, status=400)
             user=User.objects.create_user(username=username, email=email, password=password, role=role)
-            Profile.objects.create(user=user)
+            profile_data=Profile.objects.create(user=user)
+            Cart.objects.create(user=profile_data)
             return Response({'message':'user registration successfull'}, status=201)
         return Response(serial.errors, status=400)
 
@@ -32,7 +34,3 @@ class MyProfileAPI(RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return get_object_or_404(Profile.objects.select_related('user'), user__id=self.request.user.id)
-
-    @method_decorator(cache_page(60 * 5))
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
