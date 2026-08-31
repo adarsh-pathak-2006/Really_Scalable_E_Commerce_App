@@ -16,7 +16,8 @@ class RegisterSerializer(ModelSerializer):
         write_only_fields=['password']
 
 class ProfileSerializer(ModelSerializer):
+    user=UserGetSerializer(read_only=True)
     class Meta:
         model=Profile
         fields='__all__'
-        read_only_fields=['user', 'created_on']
+        read_only_fields=['created_on']
