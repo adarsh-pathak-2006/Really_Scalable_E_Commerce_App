@@ -8,7 +8,7 @@ class User(AbstractUser):
 
 class Profile(models.Model):
     user=models.OneToOneField(User, on_delete=models.CASCADE)
-    bio=models.TextField()
+    bio=models.TextField(null=True)
     created_on=models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
