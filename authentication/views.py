@@ -6,6 +6,8 @@ from .models import Profile
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 
 User=get_user_model()
 
@@ -30,3 +32,7 @@ class MyProfileAPI(RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return get_object_or_404(Profile.objects.select_related('user'), user__id=self.request.user.id)
+
+    @method_decorator(cache_page(60 * 5))
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
