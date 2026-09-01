@@ -14,13 +14,13 @@ class Product(models.Model):
     thumbnail=models.ImageField(upload_to='product-pics/')
     price=models.PositiveIntegerField()
     stock=models.PositiveIntegerField()
-    is_avaliable=models.BooleanField(default=False)
+    is_available=models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if self.stock > 0:
-            self.is_avaliable=True
+            self.is_available=True
         else:
-            self.is_avaliable=False
+            self.is_available=False
         return super().save(*args, **kwargs)
 
     def __str__(self):

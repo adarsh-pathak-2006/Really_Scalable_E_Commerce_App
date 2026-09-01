@@ -6,14 +6,17 @@ from rest_framework.response import Response
 from rest_framework.generics import RetrieveAPIView
 from e_commerce_backend.pagination import GeneralPagination
 from products.models import Product
+from rest_framework.permissions import IsAuthenticated
 
 class MyCartAPI(RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class=CartSerializer
 
     def get_object(self):
         return Cart.objects.select_related('user__user').get(user__user=self.request.user)
 
 class CartItemAPI(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         queryset=CartItem.objects.select_related('cart__user__user', 'item').filter(cart__user__user=request.user)
         paginator=GeneralPagination()
@@ -22,6 +25,7 @@ class CartItemAPI(APIView):
         return paginator.get_paginated_response(serial.data)
 
 class AddToCartAPI(APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request, pk):
         serial=CartItemSerializer(data=request.data)
         if serial.is_valid():
@@ -29,8 +33,19 @@ class AddToCartAPI(APIView):
             product_data=get_object_or_404(Product, id=pk)
             cart_data=get_object_or_404(Cart.objects.select_related('user__user'), user__user=request.user)
             cart_item_data=CartItem.objects.filter(cart=cart_data, item=product_data).first()
+            
+            if not product_data.is_available:
+                return Response({'message': 'item is out of stock'}, status=400)
+                
+            total_quantity = quantity
             if cart_item_data:
-                cart_item_data.quantity=cart_item_data.quantity+quantity
+                total_quantity += cart_item_data.quantity
+                
+            if product_data.stock < total_quantity:
+                return Response({'message': 'Cannot add product quantity more than stock available'}, status=400)
+                
+            if cart_item_data:
+                cart_item_data.quantity=total_quantity
                 cart_item_data.save()
                 return Response({'message':'product quantity incremented'}, status=201)
             CartItem.objects.create(cart=cart_data, item=product_data, quantity=quantity)
@@ -38,6 +53,7 @@ class AddToCartAPI(APIView):
         return Response(serial.errors, status=400)
 
 class IndividualCartItem(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, pk):
         data=get_object_or_404(CartItem.objects.select_related('cart__user__user'), cart__user__user=request.user, id=pk)
         serial=CartItemSerializer(data)
@@ -47,6 +63,9 @@ class IndividualCartItem(APIView):
         instance=get_object_or_404(CartItem.objects.select_related('cart__user__user'), cart__user__user=request.user, id=pk)
         serial=CartItemSerializer(instance, data=request.data, partial=True)
         if serial.is_valid():
+            if 'quantity' in serial.validated_data:
+                if instance.item.stock < serial.validated_data['quantity']:
+                    return Response({'message': 'Cannot set product quantity more than stock available'}, status=400)
             serial.save()
             return Response(serial.data, status=200)
         return Response(serial.errors, status=400)

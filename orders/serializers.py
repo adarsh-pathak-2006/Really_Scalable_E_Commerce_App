@@ -1,14 +1,14 @@
 from rest_framework.serializers import ModelSerializer
-from authentication.serializers import UserGetSerializer
+from authentication.serializers import ProfileSerializer
 from .models import Cart, CartItem
 from products.serializers import ProductSerializer
 
 class CartSerializer(ModelSerializer):
-    user=UserGetSerializer(read_only=True)
+    user=ProfileSerializer(read_only=True)
     class Meta:
         model=Cart
         fields='__all__'
-        read_only_fields='__all__'
+        read_only_fields=['id', 'user', 'created_at']
 
 class CartItemSerializer(ModelSerializer):
     cart=CartSerializer(read_only=True)

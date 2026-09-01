@@ -7,10 +7,13 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from orders.models import Cart
+from django.db import transaction
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 User=get_user_model()
 
 class RegisterAPI(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         serial=RegisterSerializer(data=request.data)
         if serial.is_valid():
@@ -21,13 +24,16 @@ class RegisterAPI(APIView):
 
             if User.objects.filter(Q(username=username) | Q(email=email)).exists():
                 return Response({'message':'username or email already exists'}, status=400)
-            user=User.objects.create_user(username=username, email=email, password=password, role=role)
-            profile_data=Profile.objects.create(user=user)
-            Cart.objects.create(user=profile_data)
+            
+            with transaction.atomic():
+                user=User.objects.create_user(username=username, email=email, password=password, role=role)
+                profile_data=Profile.objects.create(user=user)
+                Cart.objects.create(user=profile_data)
             return Response({'message':'user registration successfull'}, status=201)
         return Response(serial.errors, status=400)
 
 class MyProfileAPI(RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class=ProfileSerializer
 
     def get_object(self):

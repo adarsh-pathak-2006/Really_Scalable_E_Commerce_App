@@ -13,7 +13,7 @@ class RegisterSerializer(ModelSerializer):
     class Meta:
         model=User
         fields=['username', 'email', 'role', 'password']
-        write_only_fields=['password']
+        extra_kwargs = {'password': {'write_only': True}}
 
 class ProfileSerializer(ModelSerializer):
     user=UserGetSerializer(read_only=True)
