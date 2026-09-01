@@ -28,6 +28,11 @@ class AddToCartAPI(APIView):
             quantity=serial.validated_data['quantity']
             product_data=get_object_or_404(Product, id=pk)
             cart_data=get_object_or_404(Cart.objects.select_related('user__user'), user__user=request.user)
+            cart_item_data=CartItem.objects.filter(cart=cart_data, item=product_data).first()
+            if cart_item_data:
+                cart_item_data.quantity=cart_item_data.quantity+quantity
+                cart_item_data.save()
+                return Response({'message':'product quantity incremented'}, status=201)
             CartItem.objects.create(cart=cart_data, item=product_data, quantity=quantity)
             return Response({'message':'item successfully added in the cart'}, status=201)
         return Response(serial.errors, status=400)

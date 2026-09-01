@@ -6,8 +6,6 @@ from .models import Profile
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from orders.models import Cart
 
 User=get_user_model()
